@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniShare | Seamless P2P File Transfer</title>
+    <link rel="stylesheet" href="styles/omnishare.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Dependencies -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="discovery-panel">
+            <div class="radar-wrap">
+                <div class="radar-circle"></div>
+                <div class="radar-circle"></div>
+                <div class="radar-circle"></div>
+                <div class="device-icon">
+                    <i data-lucide="laptop" style="width: 40px; height: 40px; color: white;"></i>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <h3 id="peer-id-display">Connecting...</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">Waiting for devices to join</p>
+            </div>
+            <div id="active-peers" style="margin-top: 40px; width: 100%;">
+                <!-- Connected peers will appear here -->
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="transfer-panel">
+            <header class="header">
+                <h1>Transfer Files<span>.</span></h1>
+                <p>Secure, direct, and incredibly fast.</p>
+            </header>
+
+            <div id="drop-zone" class="share-card">
+                <i data-lucide="plus-circle" style="width: 48px; height: 48px; color: var(--primary); margin-bottom: 16px;"></i>
+                <h3>Select or Drop Files</h3>
+                <p style="font-size: 14px; margin-top: 8px;">Direct P2P transfer between your devices</p>
+            </div>
+
+            <div id="transfer-status" style="margin-top: 30px; display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span id="filename-display">Sending file...</span>
+                    <span id="percent-display">0%</span>
+                </div>
+                <div class="progress-container" style="display: block;">
+                    <div id="progress-fill" class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="qr-section">
+                <div id="qrcode"></div>
+                <p style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Scan with mobile to pair</p>
+            </div>
+        </main>
+    </div>
+
+    <input type="file" id="file-input" style="display: none;">
+
+    <script src="scripts/app.js"></script>
+</body>
+</html>

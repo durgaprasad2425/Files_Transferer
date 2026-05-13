@@ -1,0 +1,196 @@
+:root {
+    --bg: #030712;
+    --card-bg: rgba(17, 24, 39, 0.7);
+    --primary: #10b981;
+    --primary-glow: rgba(16, 185, 129, 0.3);
+    --accent: #3b82f6;
+    --text: #f9fafb;
+    --text-muted: #9ca3af;
+    --border: rgba(255, 255, 255, 0.1);
+    --glass: rgba(255, 255, 255, 0.03);
+    --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg);
+    background: radial-gradient(circle at 50% 0%, #064e3b 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, #1e1b4b 0%, transparent 40%),
+                var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* App Container */
+.app-container {
+    width: 100%;
+    max-width: 900px;
+    height: 600px;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Left Panel: Status & Discovery */
+.discovery-panel {
+    width: 40%;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    position: relative;
+}
+
+.radar-wrap {
+    width: 200px;
+    height: 200px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.radar-circle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    opacity: 0;
+    animation: pulse 3s infinite;
+}
+
+.radar-circle:nth-child(2) { animation-delay: 1s; }
+.radar-circle:nth-child(3) { animation-delay: 2s; }
+
+@keyframes pulse {
+    0% { transform: scale(0.5); opacity: 0.8; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.device-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--primary);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px var(--primary-glow);
+    z-index: 10;
+}
+
+/* Right Panel: Transfer */
+.transfer-panel {
+    flex: 1;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.header {
+    margin-bottom: 40px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+}
+
+.header p {
+    color: var(--text-muted);
+}
+
+.share-card {
+    background: var(--glass);
+    border: 1px dashed var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.share-card:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--primary);
+}
+
+.qr-section {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.qr-code {
+    width: 120px;
+    height: 120px;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+}
+
+/* Progress Bar */
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: var(--glass);
+    border-radius: 10px;
+    margin-top: 20px;
+    overflow: hidden;
+    display: none;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+    transition: width 0.3s ease;
+}
+
+/* Buttons */
+.btn {
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 10px 20px -5px var(--primary-glow);
+}
+
+.btn-primary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 25px -5px var(--primary-glow);
+}

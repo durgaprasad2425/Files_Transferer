@@ -147,7 +147,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- FILE TRANSFER LOGIC ---
-    dropZone.onclick = () => fileInput.click();
+    dropZone.onclick = () => {
+        fileInput.value = '';
+        fileInput.click();
+    };
 
     fileInput.onchange = (e) => {
         const file = e.target.files[0];

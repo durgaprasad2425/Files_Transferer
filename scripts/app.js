@@ -51,7 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PEER JS EVENTS ---
     peer.on('open', (id) => {
         console.log('My peer ID is: ' + id);
-        peerIdDisplay.innerText = "Device Online";
+        const myShortId = id.substring(0, 6).toUpperCase();
+        peerIdDisplay.innerText = `Online: ${myShortId}`;
         
         // Generate Pairing Link & QR
         const pairingLink = `${window.location.origin}${window.location.pathname}?pair=${id}`;
@@ -85,7 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleConnection(conn) {
         currentConn = conn;
-        peerIdDisplay.innerText = "Device Paired";
+        const shortId = conn.peer.substring(0, 6).toUpperCase();
+        peerIdDisplay.innerText = `Paired with ${shortId}`;
         peerIdDisplay.style.color = "var(--primary)";
         
         // Update Device Icon to Mobile if paired

@@ -76,20 +76,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     peer.on('connection', (conn) => {
         handleConnection(conn);
+        
+        // Aggressive pinging to force the channel state to update and bypass mobile NAT
+        let pingCount = 0;
+        let pingInterval = setInterval(() => {
+            if (conn.open) {
+                conn.send({ type: 'ping' });
+                clearInterval(pingInterval);
+            }
+            pingCount++;
+            if (pingCount > 20) clearInterval(pingInterval); // Stop after 10 seconds
+        }, 500);
     });
 
     function connectToPeer(id) {
         const conn = peer.connect(id);
         
         let connectionTimeout = setTimeout(() => {
-            if (!currentConn) {
+            if (currentConn !== conn) {
                 alert("Connection is taking too long. Your mobile network might be blocking direct P2P connections.");
             }
         }, 10000);
 
         conn.on('open', () => {
             clearTimeout(connectionTimeout);
-            handleConnection(conn);
+            if (currentConn !== conn) {
+                handleConnection(conn);
+            }
         });
         
         conn.on('error', (err) => {
@@ -115,7 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let receivedBytes = 0;
 
         conn.on('data', (data) => {
-            if (data.type === 'file-start') {
+            if (data.type === 'ping') {
+                // If we receive a ping, the channel is definitely open!
+                if (currentConn !== conn) {
+                    handleConnection(conn);
+                }
+                return;
+            } else if (data.type === 'file-start') {
                 transferStatus.style.display = 'block';
                 filenameDisplay.innerText = `Receiving: ${data.name}`;
                 updateProgress(0);

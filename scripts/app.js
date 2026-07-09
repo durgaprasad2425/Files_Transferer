@@ -4,7 +4,28 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
     // --- INITIALIZATION ---
-    const peer = new Peer();
+    const peer = new Peer({
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { 
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                { 
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                { 
+                    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                }
+            ]
+        }
+    });
     
     peer.on('error', (err) => {
         console.error('PeerJS Error:', err);

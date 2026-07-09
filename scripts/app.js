@@ -102,6 +102,20 @@ document.addEventListener('DOMContentLoaded', () => {
         let receivedBytes = 0;
 
         conn.on('data', (data) => {
+            // If data is binary, it's a file chunk
+            if (data instanceof ArrayBuffer || data instanceof Uint8Array || data instanceof Blob) {
+                let bufferLength = data.byteLength || data.size || 0;
+                receivedChunks.push(data);
+                receivedBytes += bufferLength;
+                
+                if (receivingFile && receivingFile.size > 0) {
+                    const percent = Math.round((receivedBytes / receivingFile.size) * 100);
+                    updateProgress(Math.min(percent, 100));
+                }
+                return;
+            }
+
+            // Otherwise, it's a JSON signaling message
             if (data.type === 'file-start') {
                 transferStatus.style.display = 'block';
                 filenameDisplay.innerText = `Receiving: ${data.name}`;
@@ -115,14 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 receivedChunks = [];
                 receivedBytes = 0;
-            } else if (data.type === 'file-chunk') {
-                receivedChunks.push(data.data);
-                receivedBytes += data.data.byteLength;
-                
-                if (receivingFile && receivingFile.size > 0) {
-                    const percent = Math.round((receivedBytes / receivingFile.size) * 100);
-                    updateProgress(Math.min(percent, 100));
-                }
             } else if (data.type === 'file-end') {
                 if (receivingFile) {
                     const blob = new Blob(receivedChunks, { type: receivingFile.fileType });
@@ -209,11 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const buffer = await slice.arrayBuffer();
             const uint8Array = new Uint8Array(buffer);
             
-            currentConn.send({
-                type: 'file-chunk',
-                data: uint8Array,
-                index: chunkIndex
-            });
+            // Send binary directly to avoid JSON serialization failures
+            currentConn.send(uint8Array);
             
             offset += CHUNK_SIZE;
             chunkIndex++;

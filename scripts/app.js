@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function connectToPeer(id) {
-        const conn = peer.connect(id, { reliable: true });
+        const conn = peer.connect(id);
         
         let connectionTimeout = setTimeout(() => {
             if (!currentConn) {
@@ -104,8 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
         peerIdDisplay.style.color = "var(--primary)";
         
         // Update Device Icon to Mobile if paired
-        document.querySelector('.device-icon i').setAttribute('data-lucide', 'smartphone');
-        lucide.createIcons();
+        const deviceIconWrap = document.querySelector('.device-icon');
+        if (deviceIconWrap) {
+            deviceIconWrap.innerHTML = '<i data-lucide="smartphone" style="width: 40px; height: 40px; color: white;"></i>';
+            lucide.createIcons();
+        }
 
         let receivingFile = null;
         let receivedChunks = [];

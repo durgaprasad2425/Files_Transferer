@@ -175,6 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (!currentConn.open) {
+            alert("The secure connection is still being established in the background. Please wait a few seconds and try again.");
+            return;
+        }
+
         transferStatus.style.display = 'block';
         filenameDisplay.innerText = `Sending: ${file.name}`;
         updateProgress(0);

@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function connectToPeer(id) {
-        const conn = peer.connect(id, { reliable: true });
+        const conn = peer.connect(id);
         handleConnection(conn);
     }
 
@@ -180,7 +180,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!currentConn.open) {
+        const CHUNK_SIZE = 16 * 1024; // 16KB safe limit for WebRTC
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+        
+        try {
+            currentConn.send({
+                type: 'file-start',
+                name: file.name,
+                fileType: file.type,
+                size: file.size,
+                totalChunks: totalChunks
+            });
+        } catch (err) {
+            console.error(err);
             alert("The secure connection is still being established in the background. Please wait a few seconds and try again.");
             return;
         }
@@ -188,17 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
         transferStatus.style.display = 'block';
         filenameDisplay.innerText = `Sending: ${file.name}`;
         updateProgress(0);
-
-        const CHUNK_SIZE = 16 * 1024; // 16KB safe limit for WebRTC
-        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-        
-        currentConn.send({
-            type: 'file-start',
-            name: file.name,
-            fileType: file.type,
-            size: file.size,
-            totalChunks: totalChunks
-        });
 
         let offset = 0;
         let chunkIndex = 0;

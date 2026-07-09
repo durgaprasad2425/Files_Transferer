@@ -189,6 +189,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const CHUNK_SIZE = 16 * 1024; // 16KB safe limit for WebRTC
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
         
+        const pc = currentConn.peerConnection;
+        if (pc) {
+            const state = pc.iceConnectionState;
+            if (state !== 'connected' && state !== 'completed') {
+                alert(`Cannot send: Your network firewall is completely blocking the WebRTC P2P connection (State: ${state}).\n\nTo fix this: Please connect your phone to the exact same Wi-Fi network as your laptop, or turn on your phone's Mobile Hotspot and connect your laptop to it!`);
+                return;
+            }
+        }
+
         try {
             currentConn.send({
                 type: 'file-start',

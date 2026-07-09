@@ -4,28 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
     // --- INITIALIZATION ---
-    const peer = new Peer({
-        config: {
-            'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { 
-                    urls: 'turn:openrelay.metered.ca:80',
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                },
-                { 
-                    urls: 'turn:openrelay.metered.ca:443',
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                },
-                { 
-                    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                }
-            ]
-        }
-    });
+    const peer = new Peer();
     
     peer.on('error', (err) => {
         console.error('PeerJS Error:', err);
@@ -97,7 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
                     peerIdDisplay.innerText = `Paired with ${shortId} (Ready)`;
                     peerIdDisplay.style.color = "#10b981"; // Green
-                } else if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+                } else if (pc.iceConnectionState === 'disconnected') {
+                    peerIdDisplay.innerText = `Paired with ${shortId} (Reconnecting...)`;
+                    peerIdDisplay.style.color = "#f59e0b"; // Orange
+                } else if (pc.iceConnectionState === 'failed') {
                     peerIdDisplay.innerText = `Paired with ${shortId} (Blocked)`;
                     peerIdDisplay.style.color = "#ef4444"; // Red
                 }

@@ -4,15 +4,16 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
     // --- INITIALIZATION ---
-    const peer = new Peer({
-        config: {
-            'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' }
-            ]
+    const peer = new Peer();
+    
+    peer.on('error', (err) => {
+        console.error('PeerJS Error:', err);
+        if (err.type === 'peer-unavailable') {
+            alert('Could not connect: The other device is offline or the ID is invalid.');
+        } else if (err.type === 'network') {
+            alert('Network error: Could not reach signaling server.');
+        } else if (err.type === 'webrtc') {
+            alert('WebRTC error: Connection failed. You might be behind a strict firewall.');
         }
     });
     let currentConn = null;

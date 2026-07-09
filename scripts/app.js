@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filenameDisplay.innerText = `Sending: ${file.name}`;
         updateProgress(0);
 
-        const CHUNK_SIZE = 256 * 1024; // 256KB
+        const CHUNK_SIZE = 16 * 1024; // 16KB safe limit for WebRTC
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
         
         currentConn.send({
@@ -201,10 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
         while (offset < file.size) {
             const slice = file.slice(offset, offset + CHUNK_SIZE);
             const buffer = await slice.arrayBuffer();
+            const uint8Array = new Uint8Array(buffer);
             
             currentConn.send({
                 type: 'file-chunk',
-                data: buffer,
+                data: uint8Array,
                 index: chunkIndex
             });
             

@@ -47,24 +47,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const pairId = urlParams.get('pair');
         if (pairId) {
-            connectToPeer(pairId);
+            setTimeout(() => {
+                connectToPeer(pairId);
+            }, 500);
         }
     });
 
     peer.on('connection', (conn) => {
-        if (conn.open) {
-            handleConnection(conn);
-        } else {
-            conn.on('open', () => {
-                handleConnection(conn);
-            });
-        }
+        handleConnection(conn);
     });
 
     function connectToPeer(id) {
-        const conn = peer.connect(id);
+        const conn = peer.connect(id, { reliable: true });
+        
+        let connectionTimeout = setTimeout(() => {
+            if (!currentConn) {
+                alert("Connection is taking too long. Your mobile network might be blocking direct P2P connections.");
+            }
+        }, 10000);
+
         conn.on('open', () => {
+            clearTimeout(connectionTimeout);
             handleConnection(conn);
+        });
+        
+        conn.on('error', (err) => {
+            clearTimeout(connectionTimeout);
+            alert("Connection error: " + err);
         });
     }
 

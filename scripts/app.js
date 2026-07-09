@@ -75,38 +75,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     peer.on('connection', (conn) => {
-        handleConnection(conn);
-        
-        // Aggressive pinging to force the channel state to update and bypass mobile NAT
-        let pingCount = 0;
-        let pingInterval = setInterval(() => {
-            if (conn.open) {
-                conn.send({ type: 'ping' });
-                clearInterval(pingInterval);
-            }
-            pingCount++;
-            if (pingCount > 20) clearInterval(pingInterval); // Stop after 10 seconds
-        }, 500);
+        conn.on('open', () => {
+            handleConnection(conn);
+        });
+        // Sometimes receiver needs to listen to data for channel to fully open
+        conn.on('data', (data) => {
+            if (data.type === 'ping') return;
+        });
     });
 
     function connectToPeer(id) {
-        const conn = peer.connect(id);
+        const conn = peer.connect(id, { reliable: true });
         
-        let connectionTimeout = setTimeout(() => {
-            if (currentConn !== conn) {
-                alert("Connection is taking too long. Your mobile network might be blocking direct P2P connections.");
-            }
-        }, 10000);
-
         conn.on('open', () => {
-            clearTimeout(connectionTimeout);
             if (currentConn !== conn) {
                 handleConnection(conn);
             }
+            conn.send({ type: 'ping' });
         });
         
         conn.on('error', (err) => {
-            clearTimeout(connectionTimeout);
+            console.error(err);
             alert("Connection error: " + err);
         });
     }
@@ -128,13 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let receivedBytes = 0;
 
         conn.on('data', (data) => {
-            if (data.type === 'ping') {
-                // If we receive a ping, the channel is definitely open!
-                if (currentConn !== conn) {
-                    handleConnection(conn);
-                }
-                return;
-            } else if (data.type === 'file-start') {
+            if (data.type === 'file-start') {
                 transferStatus.style.display = 'block';
                 filenameDisplay.innerText = `Receiving: ${data.name}`;
                 updateProgress(0);

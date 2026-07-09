@@ -87,8 +87,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleConnection(conn) {
         currentConn = conn;
         const shortId = conn.peer.substring(0, 6).toUpperCase();
-        peerIdDisplay.innerText = `Paired with ${shortId}`;
+        peerIdDisplay.innerText = `Paired with ${shortId} (Connecting...)`;
         peerIdDisplay.style.color = "var(--primary)";
+        
+        // Listen to ICE connection state to update UI when WebRTC is fully ready
+        const pc = conn.peerConnection;
+        if (pc) {
+            pc.addEventListener('iceconnectionstatechange', () => {
+                if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+                    peerIdDisplay.innerText = `Paired with ${shortId} (Ready)`;
+                    peerIdDisplay.style.color = "#10b981"; // Green
+                } else if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+                    peerIdDisplay.innerText = `Paired with ${shortId} (Blocked)`;
+                    peerIdDisplay.style.color = "#ef4444"; // Red
+                }
+            });
+        }
         
         // Update Device Icon to Mobile if paired
         const deviceIconWrap = document.querySelector('.device-icon');
@@ -193,7 +207,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pc) {
             const state = pc.iceConnectionState;
             if (state !== 'connected' && state !== 'completed') {
-                alert(`Cannot send: Your network firewall is completely blocking the WebRTC P2P connection (State: ${state}).\n\nTo fix this: Please connect your phone to the exact same Wi-Fi network as your laptop, or turn on your phone's Mobile Hotspot and connect your laptop to it!`);
+                if (state === 'failed') {
+                    alert("Cannot send: Your Wi-Fi router is blocking direct P2P connections (Client Isolation). Please use a Mobile Hotspot instead.");
+                } else {
+                    alert(`The WebRTC background connection is still ${state}. Please wait for the text to say "(Ready)" before sending!`);
+                }
                 return;
             }
         }

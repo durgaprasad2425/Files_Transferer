@@ -4,7 +4,17 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
     // --- INITIALIZATION ---
-    const peer = new Peer();
+    const peer = new Peer({
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
+            ]
+        }
+    });
     let currentConn = null;
 
     const peerIdDisplay = document.getElementById('peer-id-display');
@@ -41,12 +51,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     peer.on('connection', (conn) => {
-        handleConnection(conn);
+        if (conn.open) {
+            handleConnection(conn);
+        } else {
+            conn.on('open', () => {
+                handleConnection(conn);
+            });
+        }
     });
 
     function connectToPeer(id) {
         const conn = peer.connect(id);
-        handleConnection(conn);
+        conn.on('open', () => {
+            handleConnection(conn);
+        });
     }
 
     function handleConnection(conn) {
@@ -58,13 +76,55 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.device-icon i').setAttribute('data-lucide', 'smartphone');
         lucide.createIcons();
 
+        let receivingFile = null;
+        let receivedChunks = [];
+        let receivedBytes = 0;
+
         conn.on('data', (data) => {
-            if (data.type === 'file') {
+            if (data.type === 'file-start') {
+                transferStatus.style.display = 'block';
+                filenameDisplay.innerText = `Receiving: ${data.name}`;
+                updateProgress(0);
+                
+                receivingFile = {
+                    name: data.name,
+                    fileType: data.fileType,
+                    size: data.size,
+                    totalChunks: data.totalChunks
+                };
+                receivedChunks = [];
+                receivedBytes = 0;
+            } else if (data.type === 'file-chunk') {
+                receivedChunks.push(data.data);
+                receivedBytes += data.data.byteLength;
+                
+                if (receivingFile && receivingFile.size > 0) {
+                    const percent = Math.round((receivedBytes / receivingFile.size) * 100);
+                    updateProgress(Math.min(percent, 100));
+                }
+            } else if (data.type === 'file-end') {
+                if (receivingFile) {
+                    const blob = new Blob(receivedChunks, { type: receivingFile.fileType });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = receivingFile.name;
+                    a.click();
+                    
+                    setTimeout(() => {
+                        transferStatus.style.display = 'none';
+                        alert(`Received: ${receivingFile.name}`);
+                    }, 500);
+                    
+                    receivingFile = null;
+                    receivedChunks = [];
+                }
+            } else if (data.type === 'file') {
                 receiveFile(data);
             }
         });
 
-        alert('Connected to device!');
+        console.log('Connected to device!');
     }
 
     // --- FILE TRANSFER LOGIC ---
@@ -98,33 +158,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
         transferStatus.style.display = 'block';
         filenameDisplay.innerText = `Sending: ${file.name}`;
+        updateProgress(0);
 
-        const buffer = await file.arrayBuffer();
+        const CHUNK_SIZE = 256 * 1024; // 256KB
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
         
-        // For very large files, we should chunk them. For now, basic transfer:
         currentConn.send({
-            type: 'file',
+            type: 'file-start',
             name: file.name,
             fileType: file.type,
-            data: buffer
+            size: file.size,
+            totalChunks: totalChunks
         });
 
-        // Simulate progress for UX (since direct DataChannel progress is opaque in basic PeerJS)
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 10;
-            updateProgress(progress);
-            if (progress >= 100) {
-                clearInterval(interval);
-                setTimeout(() => {
-                    transferStatus.style.display = 'none';
-                    alert('File sent successfully!');
-                }, 500);
-            }
-        }, 100);
+        let offset = 0;
+        let chunkIndex = 0;
+
+        while (offset < file.size) {
+            const slice = file.slice(offset, offset + CHUNK_SIZE);
+            const buffer = await slice.arrayBuffer();
+            
+            currentConn.send({
+                type: 'file-chunk',
+                data: buffer,
+                index: chunkIndex
+            });
+            
+            offset += CHUNK_SIZE;
+            chunkIndex++;
+            
+            const percent = Math.round((offset / file.size) * 100);
+            updateProgress(Math.min(percent, 100));
+            
+            // Sleep slightly to let the browser process the WebRTC buffer
+            await new Promise(resolve => setTimeout(resolve, 5));
+        }
+
+        currentConn.send({ type: 'file-end' });
+        
+        setTimeout(() => {
+            transferStatus.style.display = 'none';
+            alert('File sent successfully!');
+        }, 500);
     }
 
     function receiveFile(data) {
+        // Fallback for older version
         transferStatus.style.display = 'block';
         filenameDisplay.innerText = `Receiving: ${data.name}`;
         
@@ -135,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (progress >= 100) {
                 clearInterval(interval);
                 
-                // Finalize download
                 const blob = new Blob([data.data], { type: data.fileType });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');

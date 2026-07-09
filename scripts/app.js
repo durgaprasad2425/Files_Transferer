@@ -75,29 +75,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     peer.on('connection', (conn) => {
-        conn.on('open', () => {
-            handleConnection(conn);
-        });
-        // Sometimes receiver needs to listen to data for channel to fully open
-        conn.on('data', (data) => {
-            if (data.type === 'ping') return;
-        });
+        handleConnection(conn);
     });
 
     function connectToPeer(id) {
         const conn = peer.connect(id, { reliable: true });
-        
-        conn.on('open', () => {
-            if (currentConn !== conn) {
-                handleConnection(conn);
-            }
-            conn.send({ type: 'ping' });
-        });
-        
-        conn.on('error', (err) => {
-            console.error(err);
-            alert("Connection error: " + err);
-        });
+        handleConnection(conn);
     }
 
     function handleConnection(conn) {
